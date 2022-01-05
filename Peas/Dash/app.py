@@ -13,8 +13,17 @@ import pandas as pd
 import numpy as np
 
 
-app = dash.Dash()   #initialising dash app
-
+app = dash.Dash(__name__)   #initialising dash app
+#https://stackoverflow.com/questions/51170169/clean-up-database-connection-with-sqlalchemy-in-pandas
+def get_data():
+    query = 'SELECT * FROM "RainShelterPea2022";'
+    try:
+        engine = create_engine("postgresql://cflfcl_Rainshelter_SWC:o654UkI6iGNwhzHu@database.powerplant.pfr.co.nz/cflfcl_Rainshelter_SWC", 
+        poolclass=NullPool)
+        df = pd.read_sql_query(query, engine)
+    finally:
+        engine.dispose()
+    return df
 def SWDGraph():
     SWD = get_data()
     # SWD.set_index("date", inplace=True)
@@ -49,13 +58,3 @@ app.layout = SWDGraph
 if __name__ == '__main__': 
     app.run_server(host = '0.0.0.0', port = '3006', debug=True)
 
-#https://stackoverflow.com/questions/51170169/clean-up-database-connection-with-sqlalchemy-in-pandas
-def get_data():
-    query = 'SELECT * FROM "RainShelterPea2022";'
-    try:
-        engine = create_engine("postgresql://cflfcl_Rainshelter_SWC:o654UkI6iGNwhzHu@database.powerplant.pfr.co.nz/cflfcl_Rainshelter_SWC", 
-        poolclass=NullPool)
-        df = pd.read_sql_query(query, engine)
-    finally:
-        engine.dispose()
-    return df
