@@ -266,7 +266,7 @@ fPARndvi.sort_index(inplace=True)
 fPARTreatMeans = fPARndvi.groupby(level = ['Irrigation','Date']).mean()
 
 Start = ObsDates[0]
-Today = ObsDates[-1]
+Today = datetime.date.today()
 DailyDates = pd.date_range(Start,Today)
 TreatIndex = fPARndvi.groupby(level=['Irrigation']).mean().index
 TreatIndex = pd.Categorical(TreatIndex,['Expt','2D','7D','14D','21D','MD','LD'])
