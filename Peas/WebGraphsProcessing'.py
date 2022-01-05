@@ -245,6 +245,8 @@ iPAR = AllData.loc[Daylight,'AboveCanopyPAR1'].resample('d').mean().groupby('Irr
 fPAR = (1-tPAR.divide(iPAR.values))
 fPAR.plot()
 
+fPAR
+
 # +
 TempData = MetData.loc[:,'Ta'].resample('D').mean().cumsum()
 
@@ -277,7 +279,10 @@ for Treat in DailyfPARMeans.columns:
 fPAR = pd.concat([fPAR.loc[:'2021-12-28'],DailyfPARMeans.loc['2021-12-29':]])
 fPAR.sort_index(inplace=True)
 fPAR.sort_index(axis=1,inplace=True)
+fPAR.index.name = 'Date'
 # -
+
+Ts.columns
 
 NDVIGraph = plt.figure(figsize=(6,6))
 Irrigs = DailyfPARMeans.columns.values
@@ -312,6 +317,7 @@ def estGDay(SoilRadn, AirTemp):
 
 #Calculate Ts for each treatment
 Ts = SurfaceTemp.loc[Daylight,:].dropna().resample('d').mean()
+Ts.index.name = 'Date'
 #Calculate Rn for each treatment
 Rn = MetData.loc[Daylight,'Rn'].resample('d').sum().loc[Ts.index]
 #calculate Rs for the experiment
@@ -406,6 +412,8 @@ for plot in PET.columns:
                         Eo[x],
                         'net') for x in PET.index]
 # -
+
+Ts
 
 DailyData = pd.DataFrame(Ts.unstack())
 DailyData.columns = ['Ts']
@@ -524,5 +532,8 @@ for dur in [TwoDaysAgo,SevenDaysAgo,ForteenDaysAgo,TwentyOneDaysAgo]:
 # -
 
 DailyData.columns = DailyData.columns.tolist()
+DailyData.loc[:,'date'] = DailyData.index.get_level_values(1)
 engine = create_engine('postgresql://cflfcl_Rainshelter_SWC:o654UkI6iGNwhzHu@database.powerplant.pfr.co.nz/cflfcl_Rainshelter_SWC')
 DailyData.to_sql('TempEP', engine, if_exists='replace')
+
+DailyData.index
