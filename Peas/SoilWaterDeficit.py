@@ -83,6 +83,28 @@ def UpdateSWDGraphData():
     return SoilWaterDeficit
 
 
+  # This calculation only works because field capacity is a multi index series
+SoilWaterDeficit = UpdateSWDGraphData()
+Graph = plt.figure(figsize=(18,10))
+ax = Graph.add_subplot(1,1,1)
+cols = ['orange','green','purple','orange','green','purple']
+lins = ['-','-','-','--','--','--']
+pos = 0
+for p in ['2D','7D','14D','21D','MD','LD']:
+    plt.plot(SoilWaterDeficit.loc[:,p],lins[pos],color=cols[pos],lw=4,label=p)
+    pos+=1
+plt.ylabel('Soil Water Deficit (mm)', fontsize=36);
+plt.tick_params(labelsize=25)
+plt.title('RainShelter Peas 2021-22', fontsize=28);
+plt.legend(fontsize=24, loc=3)
+ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%b'))
+ledg = plt.legend(loc=3,numpoints=1,fontsize = 16,labelspacing = 0.05, 
+                          title='Irrig Treatment')
+ledg.get_title().set_fontsize(20)
+
+fail here.  The cell after this one is reproducing the same graph as dash but doing it 
+locally with matplotlib.  Use for testing underlying data processing.
+
 # +
 app = dash.Dash()   #initialising dash app
 
@@ -119,27 +141,5 @@ app.layout = SWDGraph
 
 if __name__ == '__main__': 
     app.run_server()
-
-fail here.  The cell after this one is reproducing the same graph as dash but doing it 
-locally with matplotlib.  Use for testing underlying data processing.
-
-  # This calculation only works because field capacity is a multi index series
-SoilWaterDeficit = UpdateSWDGraphData()
-Graph = plt.figure(figsize=(18,10))
-ax = Graph.add_subplot(1,1,1)
-cols = ['orange','green','purple','orange','green','purple']
-lins = ['-','-','-','--','--','--']
-pos = 0
-for p in ['2D','7D','14D','21D','MD','LD']:
-    plt.plot(SoilWaterDeficit.loc[:,p],lins[pos],color=cols[pos],lw=4,label=p)
-    pos+=1
-plt.ylabel('Soil Water Deficit (mm)', fontsize=36);
-plt.tick_params(labelsize=25)
-plt.title('RainShelter Peas 2021-22', fontsize=28);
-plt.legend(fontsize=24, loc=3)
-ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%b'))
-ledg = plt.legend(loc=3,numpoints=1,fontsize = 16,labelspacing = 0.05, 
-                          title='Irrig Treatment')
-ledg.get_title().set_fontsize(20)
 
 
