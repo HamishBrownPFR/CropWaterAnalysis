@@ -179,7 +179,7 @@ SoilWaterDeficit
 
 SoilWaterDeficit.columns = SoilWaterDeficit.columns.tolist()
 engine = create_engine('postgresql://cflfcl_Rainshelter_SWC:o654UkI6iGNwhzHu@database.powerplant.pfr.co.nz/cflfcl_Rainshelter_SWC')
-SoilWaterDeficit.to_sql('SoilWaterDeficit1', engine)
+SoilWaterDeficit.to_sql('SoilWaterDeficit', engine,if_exists='replace')
 
 AllData = UpdateIRGraphData().loc['2021-12-10':,:]
 
@@ -525,4 +525,4 @@ for dur in [TwoDaysAgo,SevenDaysAgo,ForteenDaysAgo,TwentyOneDaysAgo]:
 
 DailyData.columns = DailyData.columns.tolist()
 engine = create_engine('postgresql://cflfcl_Rainshelter_SWC:o654UkI6iGNwhzHu@database.powerplant.pfr.co.nz/cflfcl_Rainshelter_SWC')
-DailyData.to_sql('TempEP', engine)
+DailyData.to_sql('TempEP', engine, if_exists='replace')
