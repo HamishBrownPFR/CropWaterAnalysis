@@ -99,15 +99,16 @@ def Graphs():
     for i in WaterUse.index:
         startDate = Today - datetime.timedelta(days=WaterUse.loc[i,'daysDurat'])
         duratWaterUse = Canopy.loc[i[0],'E'].loc[startDate:Yesterday].sum()
-        WaterUse.loc[i,'WaterUsed'] = duratWaterUse
-    WUfig = px.bar(WaterUse.reset_index(), x="Irrigation", y="WaterUsed", color='Irrigation',
+        WaterUse.loc[i,'WaterUsed'] = np.round(duratWaterUse)
+    WUfig = px.bar(WaterUse.reset_index(), x="Irrigation", y="WaterUsed", color='Irrigation',text="WaterUsed",pattern_shape='Irrigation',
              facet_col="Duration",
              color_discrete_sequence=['orange','green','purple','orange','green','purple'],
+             pattern_shape_sequence=['.','.','.','x','x','x'],
              category_orders={"Duration": ['Last 2 days','Last 7 days','Last 14 days','Last 21 days']})
-    WUfig.update_layout(xaxis_title = 'Date', yaxis_title = 'Water Used (mm)',
+    WUfig.update_layout(yaxis_title = 'Water Used (mm)',
                        autosize=False, width=1000, height=700, margin=dict(l=50,r=50,b=100,t=100,pad=4), paper_bgcolor="LightSteelBlue"
                       )
-    WUfig.update_traces(marker_color=['orange','green','purple','white','white','white'])
+    #WUfig.update_traces(marker_color=['orange','green','purple','white','white','white'])
     return html.Div(id = 'parent', children = [html.H1(id = 'SWD', children = 'Soil Water Deficit (Rain shelter Peas 2021/22)', 
                                                        style = {'textAlign':'left','marginTop':40,'marginBottom':40}),        
                                                dcc.Graph(id = 'SWDgraph', figure = SWDfig),
