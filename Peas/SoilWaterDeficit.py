@@ -88,7 +88,9 @@ def Graphs():
     Efig.update_layout(xaxis_title = 'Date', yaxis_title = 'Surface Temperature (oC)',
                        autosize=False, width=1000, height=700, margin=dict(l=50,r=50,b=100,t=100,pad=4), paper_bgcolor="LightSteelBlue"
                       )
-    
+    WUfig = px.bar(WaterUse.reset_index(), x="Irrigation", y="WaterUsed", color="Irrigation",
+             facet_col="Duration",
+             category_orders={"Duration": ['Last 2 days','Last 7 days','Last 14 days','Last 21 days']})
     
     return html.Div(id = 'parent', children = [html.H1(id = 'SWD', children = 'Soil Water Deficit (Rain shelter Peas 2021/22)', 
                                                        style = {'textAlign':'left','marginTop':40,'marginBottom':40}),        
@@ -101,16 +103,41 @@ def Graphs():
                                                dcc.Graph(id = 'Tsgraph', figure = Tsfig),
                                                html.H1(id = 'E', children = 'Estimated Evaopration (Rain shelter Peas 2021/22)', 
                                                        style = {'textAlign':'left','marginTop':40,'marginBottom':40}),        
-                                               dcc.Graph(id = 'Egraph', figure = Efig)
+                                               dcc.Graph(id = 'Egraph', figure = Efig),
+                                               html.H1(id = 'WU', children = 'Water Use Over set periods (Rain shelter Peas 2021/22)', 
+                                                       style = {'textAlign':'left','marginTop':40,'marginBottom':40}),        
+                                               dcc.Graph(id = 'WUgraph', figure = WUfig)
                                               ]
                    )
  
 app.layout = Graphs
 # -
 
-UpdateCanopyData().loc['14D',]
+Canopy = UpdateCanopyData()
 
 if __name__ == '__main__': 
     app.run_server()
 
+fig = px.bar(WaterUse.reset_index(), x="Irrigation", y="WaterUsed", color="Irrigation",
+             facet_col="Duration",
+             category_orders={"Duration": ['Last 2 days','Last 7 days','Last 14 days','Last 21 days']})
+fig.show()
 
+WaterUse.reset_index()
+
+# +
+Irrigs = Canopy.index.get_level_values(0).drop_duplicates()
+Durats = ['Last 2 days','Last 7 days','Last 14 days','Last 21 days']
+index = pd.MultiIndex.from_product([Irrigs,Durats],names=['Irrigation','Duration'])
+dayDurat = pd.DataFrame(index=Durats, data= [2.0,7.0,14.0,21.0],columns=['durat'])
+WaterUse = pd.DataFrame(index = index, data = [dayDurat.loc[x[1],'durat'] for x in index], columns = ['daysDurat'])
+
+Today = datetime.date.today()
+Yesterday = Today - datetime.timedelta(days=1)
+for i in WaterUse.index:
+    startDate = Today - datetime.timedelta(days=WaterUse.loc[i,'daysDurat'])
+    duratWaterUse = Canopy.loc[i[0],'E'].loc[startDate:Yesterday].sum()
+    WaterUse.loc[i,'WaterUsed'] = duratWaterUse
+# -
+
+WaterUse.reset_index()

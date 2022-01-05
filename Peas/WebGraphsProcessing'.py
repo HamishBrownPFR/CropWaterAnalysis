@@ -148,6 +148,7 @@ def UpdateCoverGraphData(TempData):
         DataTab.loc[:,'Plot'] = [NDVIPlotMaping.loc[DataTab.loc[x,'SampleNumber'],'Plot'] for x in DataTab.index]
         DataTab.loc[:,'Rep'] = [NDVIPlotMaping.loc[DataTab.loc[x,'SampleNumber'],'Rep'] for x in DataTab.index]
         DataTab.loc[:,'Irrigation'] = [NDVIPlotMaping.loc[DataTab.loc[x,'SampleNumber'],'Treat'] for x in DataTab.index]
+        DataTab.loc[:,'Irrigation'] = pd.Categorical(DataTab.loc[:,'Irrigation'],['Expt','2D','7D','14D','21D','MD','LD','soil','soil+pipes'])
         DataTab.loc[:,'Date'] = ObsDate
         DataTab.set_index(['Date','Irrigation','Rep'],inplace=True,drop=False)
         NDVIData = NDVIData.append(DataTab)
@@ -174,8 +175,6 @@ ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%b'))
 ledg = plt.legend(loc=3,numpoints=1,fontsize = 16,labelspacing = 0.05, 
                           title='Irrig Treatment')
 ledg.get_title().set_fontsize(20)
-
-SoilWaterDeficit
 
 SoilWaterDeficit.columns = SoilWaterDeficit.columns.tolist()
 engine = create_engine('postgresql://cflfcl_Rainshelter_SWC:o654UkI6iGNwhzHu@database.powerplant.pfr.co.nz/cflfcl_Rainshelter_SWC')
@@ -245,8 +244,6 @@ iPAR = AllData.loc[Daylight,'AboveCanopyPAR1'].resample('d').mean().groupby('Irr
 fPAR = (1-tPAR.divide(iPAR.values))
 fPAR.plot()
 
-fPAR
-
 # +
 TempData = MetData.loc[:,'Ta'].resample('D').mean().cumsum()
 
@@ -272,6 +269,7 @@ Start = ObsDates[0]
 Today = ObsDates[-1]
 DailyDates = pd.date_range(Start,Today)
 TreatIndex = fPARndvi.groupby(level=['Irrigation']).mean().index
+TreatIndex = pd.Categorical(TreatIndex,['Expt','2D','7D','14D','21D','MD','LD'])
 DailyfPARMeans = pd.DataFrame(index = DailyDates, columns = TreatIndex)
 for Treat in DailyfPARMeans.columns:
     DailyfPARMeans.loc[:,Treat] = np.interp(TempData.loc[Start:Today],fPARTreatMeans.loc[Treat,'AccumTemp'],fPARTreatMeans.loc[Treat,'est'])
@@ -280,9 +278,8 @@ fPAR = pd.concat([fPAR.loc[:'2021-12-28'],DailyfPARMeans.loc['2021-12-29':]])
 fPAR.sort_index(inplace=True)
 fPAR.sort_index(axis=1,inplace=True)
 fPAR.index.name = 'Date'
+fPAR.columns.name = 'Irrigation'
 # -
-
-Ts.columns
 
 NDVIGraph = plt.figure(figsize=(6,6))
 Irrigs = DailyfPARMeans.columns.values
@@ -413,8 +410,6 @@ for plot in PET.columns:
                         'net') for x in PET.index]
 # -
 
-Ts
-
 DailyData = pd.DataFrame(Ts.unstack())
 DailyData.columns = ['Ts']
 DailyVariables = ['G','To','Td','Alpha','E','fPAR','E_Ts','E_Ts_R','PET']
@@ -535,5 +530,3 @@ DailyData.columns = DailyData.columns.tolist()
 DailyData.loc[:,'date'] = DailyData.index.get_level_values(1)
 engine = create_engine('postgresql://cflfcl_Rainshelter_SWC:o654UkI6iGNwhzHu@database.powerplant.pfr.co.nz/cflfcl_Rainshelter_SWC')
 DailyData.to_sql('TempEP', engine, if_exists='replace')
-
-DailyData.index
