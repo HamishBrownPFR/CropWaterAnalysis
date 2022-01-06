@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+
+  dash:
+      build:
+        context: .
+        dockerfile: Dockerfile.dash
+      container_name: Rainshelter2022_dash
+      command: python app.py
+      volumes:
+        - .:/code
+      ports:
+        - "3006:3006"
+      restart: unless-stopped
+
