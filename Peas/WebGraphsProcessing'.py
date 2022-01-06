@@ -14,8 +14,6 @@
 # ---
 
 import dash
-import dash_table
-import dash_html_components as html
 import dash_core_components as dcc
 import plotly.graph_objects as go
 import plotly.express as px
@@ -103,21 +101,21 @@ def UpdateSWDGraphData():
 
     #Calculate the water content of the soil profile by multiplying the volumetric water content by each layers
     #depth and summing.  The 0-15 layers are divided by 2 to average the two readings
-    ProfileWater = DataMeans.loc[:,'D1I'] * 150/2 + \
-                   DataMeans.loc[:,'D1B'] * 150/2 + \
-                   DataMeans.loc[:,'D2'] * 150 + \
-                   DataMeans.loc[:,'D3'] * 300 + \
-                   DataMeans.loc[:,'D4'] * 300 + \
-                   DataMeans.loc[:,'D5'] * 300 + \
-                   DataMeans.loc[:,'D6'] * 300 + \
-                   DataMeans.loc[:,'D7'] * 300
+    ProfileWater = np.add(np.add(np.add(np.add(np.add(np.add(np.add(
+                          DataMeans.loc[:,'D1I'] * 150/2 , 
+                          DataMeans.loc[:,'D1B'] * 150/2), 
+                          DataMeans.loc[:,'D2'] * 150),
+                          DataMeans.loc[:,'D3'] * 300),
+                          DataMeans.loc[:,'D4'] * 300),
+                          DataMeans.loc[:,'D5'] * 300),
+                          DataMeans.loc[:,'D6'] * 300),
+                          DataMeans.loc[:,'D7'] * 300)
 
     FieldCapacity = ProfileWater.resample('D').max()
     FieldCapacity = FieldCapacity.loc['2021-11-25']   # I would have though this would return a data frame with a single row but instead it returns a series with a multiindex in columns
     SoilWaterDeficit = -(FieldCapacity - ProfileWater.loc['2021-11-18':,:])
     SoilWaterDeficit.loc[:,'date'] = SoilWaterDeficit.index.get_level_values(0)
     return SoilWaterDeficit
-
 
 
 def UpdateCoverGraphData(TempData):
@@ -251,7 +249,7 @@ NDVIData, ObsDates = UpdateCoverGraphData(MetData.loc[:,'Ta'].resample('D').mean
 
 NDVIMeans = NDVIData.groupby(level = ['Date','Irrigation','Rep']).mean()
 CropNDVI  = NDVIMeans.loc[~NDVIMeans.index.isin(['soil','soil+pipes'],level=2),'NDVI']
-BareNDVI = NDVIMeans.loc[NDVIMeans.index.isin(['soil+pipes'],level=2),'NDVI']
+BareNDVI = NDVIMeans.loc[NDVIMeans.index.isin(['soil+pipes'],level=2),'NDVI'].dropna()
 fPARndvi = pd.DataFrame(index = CropNDVI.index, columns=['est'])
 for Date in ObsDates:
     BareVal = 0.15
@@ -268,7 +266,7 @@ fPARTreatMeans = fPARndvi.groupby(level = ['Irrigation','Date']).mean()
 Start = ObsDates[0]
 Today = datetime.date.today()
 DailyDates = pd.date_range(Start,Today)
-TreatIndex = fPARndvi.groupby(level=['Irrigation']).mean().index
+TreatIndex = fPARndvi.groupby(level=['Irrigation']).mean().dropna().index
 TreatIndex = pd.Categorical(TreatIndex,['Expt','2D','7D','14D','21D','MD','LD'])
 DailyfPARMeans = pd.DataFrame(index = DailyDates, columns = TreatIndex)
 for Treat in DailyfPARMeans.columns:
