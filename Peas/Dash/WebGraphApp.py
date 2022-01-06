@@ -36,6 +36,7 @@ def UpdateCanopyData():
 
 
 # +
+
 app = dash.Dash()   #initialising dash app
 
 def Graphs():
@@ -121,10 +122,15 @@ def Graphs():
                                                html.H1(id = 'WU', children = 'Water Use Over set periods (Rain shelter Peas 2021/22)', 
                                                        style = {'textAlign':'left','marginTop':40,'marginBottom':40}),        
                                                dcc.Graph(id = 'WUgraph', figure = WUfig)
-                                              ]
+                                              ],
+                style = {'Height' : '50%','width' : '75%', 
+                         'marginBottom': 50,
+                         'marginLeft': 200, 'marginRight': 25
+                        }
                    )
  
 app.layout = Graphs
+
 # -
 
 if __name__ == '__main__': 
