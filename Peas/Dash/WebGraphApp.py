@@ -21,10 +21,7 @@ import plotly.express as px
 import datetime
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
 from sqlalchemy import create_engine
-# %matplotlib inline
 
 def UpdateSWDGraphData():
     engine = create_engine('postgresql://cflfcl_Rainshelter_SWC:o654UkI6iGNwhzHu@database.powerplant.pfr.co.nz/cflfcl_Rainshelter_SWC')

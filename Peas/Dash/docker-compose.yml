@@ -7,7 +7,7 @@ services:
         context: .
         dockerfile: Dockerfile.dash
       container_name: Rainshelter2022_dash
-      command: python app.py
+      command: python WebGraphApp.py
       volumes:
         - .:/code
       ports:
