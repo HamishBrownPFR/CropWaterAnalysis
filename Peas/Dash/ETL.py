@@ -1,6 +1,14 @@
+
+# Aim: read data from iplant and do manipulation then uplaod to db for Dash to access
+# RainShelterPea2022
+# sqlalchemy and pandas solution
+from sqlalchemy import create_engine
+import pandas as pd
+from sqlalchemy.pool import NullPool
+import datetime
+import numpy as np
 # %%
 import datetime
-import pandas as pd
 import numpy as np
 import ETFunctions as et
 import os
@@ -18,17 +26,17 @@ def UpdateIRGraphData():
                          index_col = 0, #Use the first column, which is Date, as an index
                          na_values = 'NAN')
     #Bring in index data
-    DataIndex=pd.read_excel('I:/Science Projects/I211007-02/Exception Files/04 Research/LoggedData/RadiationAndTempIndex.xlsx', 
+    DataIndex=pd.read_excel('I:/Science Projects/I211007-02/Exception Files/04 Research/LoggedData/RadiationAndTempIndex.xlsx',
                             sheet_name='Sensor positions',
                             usecols = range(9))
     DataIndex.loc[:,'Irrigation'] = pd.Categorical(DataIndex.loc[:,'Irrigation'],['Expt','2D','7D','14D','21D','MD','LD'])
     DataIndex.set_index('ColumnHeader',inplace=True)
     DataIndex.dropna(inplace=True)
     # #Apply indexes to data
-    DataTransposed = RawData.transpose() 
+    DataTransposed = RawData.transpose()
     DataIndexed = pd.concat([DataIndex,DataTransposed], axis=1,sort=False)
     DataIndexed.index.name='ColumnHeader'
-    DataIndexed.set_index(['Measurement','Irrigation','Species','Treatment','Units','Summary','Plot','Block'], 
+    DataIndexed.set_index(['Measurement','Irrigation','Species','Treatment','Units','Summary','Plot','Block'],
                              append=False, inplace=True)
     Data=DataIndexed.transpose()
     Data.index = pd.to_datetime(Data.index)  ## for some reason the concat function changes the data type on the date indes so need to change it back
@@ -40,6 +48,7 @@ def UpdateIRGraphData():
 # %%
 def UpdateSWDGraphData():
     #Read in data
+    print("Read .dat file.")
     AllData=pd.read_csv('I:/Science Projects/I211007-02/Exception Files/04 Research/LoggedData/RainShelterAlpha_CS650.dat', #specify file path for data to read in
                              parse_dates=True, #tell the function to parse date columns to datetime formats
                              dayfirst=True, #tell the function that the day is before the year in the data i.e format='%d/%m/%Y %H:%M'
@@ -48,15 +57,17 @@ def UpdateSWDGraphData():
                              na_values = 'NAN')
 
     #Bring in index data
+    print("Read index file.")
     AllDataIndex=pd.read_csv('I:/Science Projects/I211007-02/Exception Files/04 Research/LoggedData/SoilWaterAndTempIndex.csv',
-                             index_col = 0)
+                             index_col = 0)    #Read in data
     AllDataIndex.loc[:,'Irrigation'] = pd.Categorical(AllDataIndex.loc[:,'Irrigation'],['date','2D','7D','14D','21D','MD','LD'])
     #Apply indexes to data
+    print("Processing data.")
     AllDataTransposed = AllData.transpose()
 
     AllDataIndexed = pd.concat([AllDataIndex,AllDataTransposed], axis=1,sort=False)
     AllDataIndexed.index.name='ColumnHeader'
-    AllDataIndexed.set_index(['Measurement','Depth','Irrigation','Species','Plot','Sensor', 'MUX', 'Port','Units','Summary','Block','Treatment'], 
+    AllDataIndexed.set_index(['Measurement','Depth','Irrigation','Species','Plot','Sensor', 'MUX', 'Port','Units','Summary','Block','Treatment'],
                             append=False, inplace=True)
     AllDataIndexed.sort_index(inplace=True)
     Data=AllDataIndexed.transpose()
@@ -147,7 +158,7 @@ SoilWaterDeficit = UpdateSWDGraphData()
 # plt.title('RainShelter Peas 2021-22', fontsize=28);
 # plt.legend(fontsize=24, loc=3)
 # ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%b'))
-# ledg = plt.legend(loc=3,numpoints=1,fontsize = 16,labelspacing = 0.05, 
+# ledg = plt.legend(loc=3,numpoints=1,fontsize = 16,labelspacing = 0.05,
 #                           title='Irrig Treatment')
 # ledg.get_title().set_fontsize(20)
 
@@ -238,7 +249,7 @@ for Date in ObsDates:
     if BareNDVI[Date].values != np.nan:
         BareVal = BareNDVI[Date].values
     fPARndvi.loc[Date,'est'] = np.subtract(CropNDVI.loc[Date].values, BareVal)/np.subtract(0.85,BareVal)
-fPARndvi.loc[:,'est'] = pd.to_numeric(fPARndvi.loc[:,'est']) 
+fPARndvi.loc[:,'est'] = pd.to_numeric(fPARndvi.loc[:,'est'])
 fPARndvi.dropna(inplace=True)
 fPARndvi.index  =fPARndvi.index.swaplevel('Date','Irrigation',)
 fPARndvi.index  =fPARndvi.index.swaplevel('Date','Rep',)
@@ -254,7 +265,7 @@ TreatIndex = pd.Categorical(TreatIndex,['Expt','2D','7D','14D','21D','MD','LD'])
 DailyfPARMeans = pd.DataFrame(index = DailyDates, columns = TreatIndex)
 for Treat in DailyfPARMeans.columns:
     DailyfPARMeans.loc[:,Treat] = np.interp(TempData.loc[Start:Today],fPARTreatMeans.loc[Treat,'AccumTemp'],fPARTreatMeans.loc[Treat,'est'])
-    
+
 fPAR = pd.concat([fPAR.loc[:'2021-12-28'],DailyfPARMeans.loc['2021-12-29':]])
 fPAR.sort_index(inplace=True)
 fPAR.sort_index(axis=1,inplace=True)
@@ -281,16 +292,16 @@ fPAR.columns.name = 'Irrigation'
 # plt.legend(loc=3,fontsize=10)
 
 # %%
-## Note.  We found an error in the calculations for estGDay coefficients when 
+## Note.  We found an error in the calculations for estGDay coefficients when
 ## revising the companion paper
-## As the paper describing this work had already been referreed we have not 
-## changed these and note it only makes a samll difference  
+## As the paper describing this work had already been referreed we have not
+## changed these and note it only makes a samll difference
 ## The correct coefficients are commented below
 def estGDay(SoilRadn, AirTemp):
     Const = -0.7091  ## -0.6139
     SoilRadEff = np.multiply(SoilRadn.values,0.2149) ##0.0801
     AirTempEff = np.multiply(AirTemp.values,0.0739) ##0.0659
-    return Const + SoilRadEff  + AirTempEff 
+    return Const + SoilRadEff  + AirTempEff
 
 #Calculate Ts for each treatment
 Ts = SurfaceTemp.loc[Daylight,:].dropna().resample('d').mean()
@@ -328,7 +339,7 @@ Eo = MetData.loc[Daylight,'Eo'].resample('d').mean().loc[Ts.index]
 To = pd.DataFrame(index = Ts.index,columns=Ts.columns)
 for p in To.columns:
     To.loc[:,p] = Ts.loc[:,p] + Ed
-    
+
 #Calculate temperature difference
 Td = pd.DataFrame(index = Ts.index,columns=Ts.columns)
 for p in Td.columns:
@@ -342,7 +353,7 @@ def AlphaCoeff(Td,fPAR):
     #return 1/(0.68 + 0.18*Td ) * CoverFact
     #return np.exp(0.2663)  * np.exp(Td*-0.1270) * CoverFact
     #return np.exp(0.34)  * np.exp(Td*-0.14) * CoverFact
-    
+
 Alpha = pd.DataFrame(index = Ts.index,columns=Ts.columns)
 for p in Alpha.columns:
     Alpha.loc[:,p] = [AlphaCoeff(Td.loc[x,p],
@@ -512,5 +523,3 @@ DailyData.columns = DailyData.columns.tolist()
 DailyData.loc[:,'date'] = DailyData.index.get_level_values(1)
 engine = create_engine('postgresql://cflfcl_Rainshelter_SWC:o654UkI6iGNwhzHu@database.powerplant.pfr.co.nz/cflfcl_Rainshelter_SWC')
 DailyData.to_sql('TempEP', engine, if_exists='replace')
-
-
