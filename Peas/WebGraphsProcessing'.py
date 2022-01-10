@@ -26,6 +26,8 @@ from matplotlib.dates import DayLocator, HourLocator, DateFormatter, drange
 import ETFunctions as et
 import os
 from sqlalchemy import create_engine
+import statsmodels.api as sm
+from statsmodels.formula.api import ols
 # %matplotlib inline
 Lattitude = -43.38
 LongitudeTZ = 185
@@ -95,6 +97,7 @@ def UpdateSWDGraphData():
     F2 = ObsData.columns.get_level_values(2).drop_duplicates().values
     Blocks = ObsData.columns.get_level_values(3).drop_duplicates().values
     ObsData.loc['2021-12-13 05:00:00':'2021-12-13 17:00:00',:] =np.nan
+    ObsData.loc['2022-01-07 12:00:00':'2022-01-10 01:00:00',:] =np.nan
 
     #Calculate treatment means omitting data prior to 2014-11-05 08:00:00 to avoid NaN values
     DataMeans =  ObsData.groupby(level=['Depth','Irrigation'],axis=1).mean()
@@ -408,6 +411,15 @@ for plot in PET.columns:
                         'net') for x in PET.index]
 # -
 
+#Path in some estimates for the weekend when the data logger battery went flat
+MissingDayRatios = pd.DataFrame(index = Irrigs, data = [0.7815965916642504, 0.7657055033056245, 0.5672304292595509,
+       0.5858719533614255, 0.5229522611745785, 0.4366836187501365], columns = ['Ratio'])
+MissingDayRatios.loc[:,'8th'] = MissingDayRatios.loc[:,'Ratio'].multiply(5.02)
+MissingDayRatios.loc[:,'9th'] = MissingDayRatios.loc[:,'Ratio'].multiply(6.00)
+for i in Irrigs:
+    E.loc['2022-01-08 00:00:00',i] = MissingDayRatios.loc[i,'8th']
+    E.loc['2022-01-09 00:00:00',i] = MissingDayRatios.loc[i,'9th']
+
 DailyData = pd.DataFrame(Ts.unstack())
 DailyData.columns = ['Ts']
 DailyVariables = ['G','To','Td','Alpha','E','fPAR','E_Ts','E_Ts_R','PET']
@@ -429,6 +441,8 @@ for I in Irrigs:
         DailyData.loc[I,'Ed'] = Ed.values
         DailyData.loc[I,'Ta'] = Ta.values
         DailyData.loc[I,'u'] = u.values
+
+E
 
 Today = datetime.date.today()
 Yesterday = Today - datetime.timedelta(days=1)
@@ -528,3 +542,30 @@ DailyData.columns = DailyData.columns.tolist()
 DailyData.loc[:,'date'] = DailyData.index.get_level_values(1)
 engine = create_engine('postgresql://cflfcl_Rainshelter_SWC:o654UkI6iGNwhzHu@database.powerplant.pfr.co.nz/cflfcl_Rainshelter_SWC')
 DailyData.to_sql('TempEP', engine, if_exists='replace')
+
+ratios = pd.DataFrame(index=Irrigs,columns=['ratio'])
+graph = plt.figure(figsize=(20,10))
+xpos=0
+for i in Irrigs:
+    ax= graph.add_subplot(2,3,xpos+1)
+    x = DailyData.loc[i,'PET'].loc['2021-12-25':'2022-01-07']
+    y = DailyData.loc[i,'E'].loc['2021-12-25':'2022-01-07']
+    plt.plot(x,y,'o',color=colors[xpos])
+    plt.ylim(0,9)
+    plt.plot([0,9],[0,9],'-')
+    plt.text(0.05,0.95,i,transform=ax.transAxes)
+    ModFit = sm.regression.linear_model.OLS(y,  # Y variable
+                                        sm.add_constant(x), # X variable
+                                        missing='drop',                                     # ignor and data where one value is missing
+                                        hasconst=False) 
+    RegFit = ModFit.fit();  # fit models parameters
+    Slope = RegFit.params[1]
+    Intercept = RegFit.params[0]
+    fitYs = [Intercept,Intercept+Slope*9]
+    plt.plot([0,9],fitYs)
+    ratios.loc[i,'ratio'] = Slope = RegFit.params[1]
+    xpos +=1
+
+BroadFieldsPET = pd.read_pickle('C:\GitHubRepos\CropWaterAnalysis\General\BroadfieldsMet\BroadFieldsPET.pkl')
+
+BroadFieldsPET
